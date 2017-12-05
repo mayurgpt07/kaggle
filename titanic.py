@@ -114,7 +114,7 @@ classifier.fit(imputed_train_data.iloc[:,[5,15,16,18,19,22,23,24,25,26,27,29,30,
 print(classifier.feature_importances_)
 # print(imputed_train_data.iloc[1:3, 20:28])
 #                                            0               0        0        0        0
-X, y = imputed_train_data.iloc[:, [5,6,15,16,18,19,23,24,25,26,27,29,30,31,32,36,37,38,39]], imputed_train_data.iloc[:, 1]
+X, y = imputed_train_data.iloc[:, [5,6,15,16,19,23,24,25,27,29,31,32,38]], imputed_train_data.iloc[:, 1]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 0)
 
@@ -142,7 +142,7 @@ plt.plot(fpr, tpr, 'b')
 print(np.std(X_train, 0)*logistic_model2.coef_[0])
 # print(logistic_model2.score(X_test, y_test))
 print(imputed_test_data.iloc[1:4,24:27])
-to_test = imputed_test_data.iloc[:, [4,6,14,15,17,18,22,23,24,25,26,28,29,30,31,35,36,37,38]]
+to_test = imputed_test_data.iloc[:, [4,5,14,15,18,22,23,24,26,28,30,31,37]]
 results = logistic_model2.predict(to_test)
 
 d = {"PassengerId": pd.Series(imputed_test_data.iloc[:,0]), "Survived": pd.Series(results)}

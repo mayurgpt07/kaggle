@@ -8,4 +8,4 @@ The above code gave me a score of about 80.38% on kaggle whereas the cross valid
 The problem is the second problem on kaggle. The problem has the need of extensive feature engineering and some basic knowledge of the terms that are generally used in this domain.
 Note. It is important to be familiar with the units as differnt countries have different units of measurement.
 
-# Contributors - Shaunak Sen xxnd Deepak Kumar Taneja
+#### Contributors - Shaunak Sen and Deepak Kumar Taneja

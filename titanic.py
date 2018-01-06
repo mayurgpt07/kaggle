@@ -109,11 +109,11 @@ imputed_test_data = imputed_test_data.join(pd.get_dummies(imputed_test_data['Cab
 print(imputed_train_data.iloc[1:3,35:42])
 print(imputed_train_data.iloc[1:3,12:20])
 classifier = ExtraTreesClassifier()
-# print(imputed_train_data.iloc[:,1])                    0           0                 0  0             0
+# print(imputed_train_data.iloc[:,1])                             
 classifier.fit(imputed_train_data.iloc[:,[5,15,16,18,19,22,23,24,25,26,27,29,30,31,32,33,34,36,37,38,39,40]], imputed_train_data.iloc[:,1])
 print(classifier.feature_importances_)
 # print(imputed_train_data.iloc[1:3, 20:28])
-#                                            0               0        0        0        0
+#                                            
 X, y = imputed_train_data.iloc[:, [5,6,15,16,19,23,24,25,27,29,31,32,38]], imputed_train_data.iloc[:, 1]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 0)

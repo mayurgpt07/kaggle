@@ -21,28 +21,41 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
 #plt.show()
 
-X, y = train_data.loc[:, 'bedrooms': 'sqft_lot15'], train_data.loc[:, 'price']
+train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
+train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
+train_data['Log_sqftlot15'] = train_data['sqft_lot15'].apply(lambda x: np.log(x))
+
+print(train_data.columns)
+#plt.hist(train_data['sqft_lot'], color = "red")
+#plt.hist(train_data['sqft_lot'], color = "skyblue")
+#plt.hist(train_data['price'], color = 'red')
+#plt.hist(train_data['sqft_living'], color = 'brown')
+plt.hist(train_data['Log_sqftlot15'], color = 'skyblue')
+plt.hist(train_data['grade'], color = 'green')
+plt.show()
+
+columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade',
+       'sqft_above', 'sqft_basement', 'yr_built', 'yr_renovated',
+       'lat', 'long', 'sqft_living15','Log_sqftlot15',
+       'Log_sqftlot']
+
+
+X, y = train_data.loc[:, columnsToTrain], train_data.loc[:, 'Log_price']
 
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
 
-train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
-train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
-#plt.hist(train_data['sqft_lot'], color = "red")
-plt.hist(train_data['sqft_lot'], color = "skyblue")
-plt.hist(train_data['price'], color = 'red')
-plt.show()
 
-#model = LinearRegression()
+model = LinearRegression()
 
-#fittedModel = model.fit(X_train, Y_train)
+fittedModel = model.fit(X_train, Y_train)
 
-#print(fittedModel.score(X_train, Y_train))
-#print(fittedModel.coef_)
+print(fittedModel.score(X_train, Y_train))
+print(fittedModel.coef_)
 
 
-#formuala = 'price ~ bedrooms+bathrooms+sqft_living+sqft_lot+floors+waterfront+view+condition+grade+sqft_above+sqft_basement+yr_built+zipcode+lat+long+sqft_living15+sqft_lot15'
-#statisticalModel = sm.ols(formuala, data = train_data)
-#statsfitted = statisticalModel.fit()
-#print(statsfitted.summary())
+formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+sqft_basement+yr_built+zipcode+lat+long+sqft_living15+Log_sqftlot15'
+statisticalModel = sm.ols(formuala, data = train_data)
+statsfitted = statisticalModel.fit()
+print(statsfitted.summary())
 
 #print(fittedModel.predict(X_test))

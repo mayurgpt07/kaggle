@@ -24,18 +24,18 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
 train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
 train_data['Log_sqftlot15'] = train_data['sqft_lot15'].apply(lambda x: np.log(x))
+train_data['Log_sqftBasement'] = train_data['sqft_basement'].apply(lambda x:np.log(x))
 
-print(train_data.columns)
 #plt.hist(train_data['sqft_lot'], color = "red")
 #plt.hist(train_data['sqft_lot'], color = "skyblue")
 #plt.hist(train_data['price'], color = 'red')
 #plt.hist(train_data['sqft_living'], color = 'brown')
-plt.hist(train_data['Log_sqftlot15'], color = 'skyblue')
-plt.hist(train_data['grade'], color = 'green')
+plt.hist(train_data['sqft_above'], color = 'skyblue')
+plt.hist(train_data['sqft_basement'], color = 'green')
 plt.show()
 
 columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade',
-       'sqft_above', 'sqft_basement', 'yr_built', 'yr_renovated',
+       'sqft_above', 'Log_sqftBasement', 'yr_built',
        'lat', 'long', 'sqft_living15','Log_sqftlot15',
        'Log_sqftlot']
 
@@ -53,7 +53,7 @@ print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
 
-formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+sqft_basement+yr_built+zipcode+lat+long+sqft_living15+Log_sqftlot15'
+formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+Log_sqftBasement+yr_built+lat+long+sqft_living15+Log_sqftlot15'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())

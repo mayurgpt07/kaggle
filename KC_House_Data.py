@@ -13,9 +13,12 @@ train_data = pd.read_csv("./data/kc_house_data.csv", sep = ",", header = 0)
 #Start PreProcessing 
 train_data['dateInFormat'] = train_data['date'].apply(lambda x: x[0:8])
 train_data['dateInFormat'] = train_data['dateInFormat'].apply(lambda x: datetime.strptime(x, '%Y%m%d'))
-
-print(train_data)
+train_data['YearSold'] = train_data['dateInFormat'].apply(lambda x: int(x.year))
+train_data['HomeAgeinYear'] = train_data['YearSold'] - train_data['yr_built']
+train_data['RenovatedafterYears'] = train_data['yr_built'] - train_data['yr_renovated']
 #Check the correlation matrix with price
+
+
 train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm', axis=None)
 
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
@@ -24,25 +27,23 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
 train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
 train_data['Log_sqftlot15'] = train_data['sqft_lot15'].apply(lambda x: np.log(x))
-train_data['Log_sqftBasement'] = train_data['sqft_basement'].apply(lambda x:np.log(x))
 
 #plt.hist(train_data['sqft_lot'], color = "red")
 #plt.hist(train_data['sqft_lot'], color = "skyblue")
 #plt.hist(train_data['price'], color = 'red')
 #plt.hist(train_data['sqft_living'], color = 'brown')
-plt.hist(train_data['sqft_above'], color = 'skyblue')
-plt.hist(train_data['sqft_basement'], color = 'green')
+plt.hist(train_data['RenovatedafterYears'], color = 'green')
 plt.show()
 
 columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade',
-       'sqft_above', 'Log_sqftBasement', 'yr_built',
+       'sqft_above', 'HomeAgeinYear', 'RenovatedafterYears',
        'lat', 'long', 'sqft_living15','Log_sqftlot15',
        'Log_sqftlot']
 
 
 X, y = train_data.loc[:, columnsToTrain], train_data.loc[:, 'Log_price']
 
-X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
+X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.30)
 
 
 model = LinearRegression()
@@ -53,7 +54,7 @@ print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
 
-formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+Log_sqftBasement+yr_built+lat+long+sqft_living15+Log_sqftlot15'
+formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+HomeAgeinYear+RenovatedafterYears+lat+long+sqft_living15+Log_sqftlot15'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())

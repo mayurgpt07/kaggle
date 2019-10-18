@@ -65,15 +65,21 @@ fittedModel = model.fit(X_train, Y_train)
 model2 = LinearRegression()
 fittedModel2 = model2.fit(polynomialCurveFitting, Y_train)
 
+polynomialCurveFittingTest = polynomialVariable.fit_transform(X_test)
+
+print("Test Result")
+print(fittedModel2.predict(polynomialCurveFittingTest))
+
+np.savetxt("PredictionOfHousePrice.csv", fittedModel2.predict(polynomialCurveFittingTest), delimiter = "," )
+np.savetxt("TestHousePrice.csv", Y_test, delimiter = "," )
+
 print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
 print(fittedModel2.score(polynomialCurveFitting, Y_train))
-print(fittedModel2.coef_)
 
 formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+HomeAgeinYear+RenovatedafterYears+IsBasementThere+lat+long'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())
 
-#print(fittedModel.predict(X_test))

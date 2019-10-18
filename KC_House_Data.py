@@ -1,6 +1,7 @@
 from sklearn import linear_model
 from sklearn import model_selection
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -30,14 +31,12 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
 train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
 train_data['Log_sqftlot15'] = train_data['sqft_lot15'].apply(lambda x: np.log(x))
-
+train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else -1)
 #plt.hist(train_data['sqft_lot'], color = "red")
 #plt.hist(train_data['sqft_lot'], color = "skyblue")
-#plt.hist(train_data['RenovatedafterYears'], color = 'green')
 #plt.show()
 
-columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade',
-       'sqft_above', 'HomeAgeinYear', 'RenovatedafterYears',
+columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade', 'HomeAgeinYear', 'RenovatedafterYears','IsBasementThere',
        'lat', 'long','Log_sqftlot']
 
 
@@ -52,15 +51,27 @@ print(vif)
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.30)
 
 
+polynomialVariable = PolynomialFeatures(degree = 3)
+polynomialCurveFitting = polynomialVariable.fit_transform(X_train)
+
+polynomialVariable.fit(X_train, Y_train)
+
+
+
 model = LinearRegression()
 
 fittedModel = model.fit(X_train, Y_train)
 
+model2 = LinearRegression()
+fittedModel2 = model2.fit(polynomialCurveFitting, Y_train)
+
 print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
+print(fittedModel2.score(polynomialCurveFitting, Y_train))
+print(fittedModel2.coef_)
 
-formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+sqft_above+HomeAgeinYear+RenovatedafterYears+lat+long'
+formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+HomeAgeinYear+RenovatedafterYears+IsBasementThere+lat+long'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())

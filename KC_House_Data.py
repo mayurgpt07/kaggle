@@ -95,7 +95,6 @@ ActualDataFrame = pd.DataFrame()
 TestingDataFrame['PredictedValues'] = TestingDataFrame['LogPredictedPrice'].apply(lambda x: math.exp(x))
 ActualDataFrame['ActualValues'] = pd.Series(Y_test).apply(lambda x: math.exp(x))
 
-
 np.savetxt("PredictionOfHousePrice.csv", TestingDataFrame['PredictedValues'], delimiter = "," )
 np.savetxt("ActualHousePRice.csv", ActualDataFrame['ActualValues'], delimiter = ",")
 

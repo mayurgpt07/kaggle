@@ -23,7 +23,7 @@ lemmatizer = WordNetLemmatizer()
 train_data['new_Comment_Text'] = train_data['comment_text'].apply(lambda x: re.sub('\s+',' ',x.strip().lower()))
 #test_data['new_Comment_Text'] = test_data['comment_text'].apply(lambda x:re.sub('\s+',' ',x.strip().lower()))
 
-train_data['new_Comment_Text'] = train_data['new_Comment_Text'].apply(lambda x: re.sub('\ |\!|\/|\;|\:|\=|\"|\:|\]|\[|\<|\>|\{|\}|\'|\?|\.|\,',' ', x))
+train_data['new_Comment_Text'] = train_data['new_Comment_Text'].apply(lambda x: re.sub('\ |\!|\/|\;|\:|\=|\"|\:|\]|\[|\<|\>|\{|\}|\'|\?|\.|\,|\|',' ', x))
 #test_data['new_Comment_Text'] = train_data['new_Comment_Text'].apply(lambda x: re.sub('\ |\!|\/|\;|\:|\=|\"|\:|\]|\[|\<|\>|\{|\}|\'|\?|\.|\,',' ', x))
  
 train_data['CommentTokenize'] = train_data['new_Comment_Text'].apply(lambda x: word_tokenize(x))
@@ -123,29 +123,30 @@ empty_string5 = ''
 for i in Identitytoxic_data['Comments']:
 	empty_string5 = empty_string5.strip() + ' ' + i.strip()
 
-wordcloud = WordCloud(width = 900, height = 900, 
+
+wordcloud = WordCloud(width = 900, height = 900,
                 background_color ='white',
-                min_font_size = 10).generate(empty_string) 
- 
-wordcloud1 = WordCloud(width = 900, height = 900, 
+                min_font_size = 10).generate(empty_string)
+
+wordcloud1 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string1)
 
-wordcloud2 = WordCloud(width = 900, height = 900, 
+wordcloud2 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string2)
 
-wordcloud3 = WordCloud(width = 900, height = 900, 
+wordcloud3 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string3)
 
-wordcloud4 = WordCloud(width = 900, height = 900, 
+wordcloud4 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string4)
 
-wordcloud5 = WordCloud(width = 900, height = 900, 
+wordcloud5 = WordCloud(width = 900, height = 900,
                 background_color ='white',
-                min_font_size = 10).generate(empty_string5)                                                                  
+                min_font_size = 10).generate(empty_string5)                                                               
 # plot the WordCloud image                        
 plt.figure(figsize = (8, 8), facecolor = None) 
 plt.imshow(wordcloud)

@@ -40,6 +40,8 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
 #plt.show()
 
+#GeoLocation to be added into the picture. Try to convert Latitude and Longitude to location names
+
 #Lot of variables are not specifically normally distributed. Therefore transforming them using log(Base e) transform
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
 train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))

@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import statsmodels.formula.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
-import math 
+import math
+import geocoder as gc
 
 train_data = pd.read_csv("./data/kc_house_data.csv", sep = ",", header = 0)
 
@@ -40,7 +41,16 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
 #plt.show()
 
+listofLatLong = []
 #GeoLocation to be added into the picture. Try to convert Latitude and Longitude to location names
+for i in range(0, 4):
+	print(train_data.loc[0,'long'])
+	coordiantes = [train_data.loc[0,'lat'], train_data.loc[0,'long']]
+	print(coordiantes)
+	print(gc.google(coordiantes, method = 'reverse'))
+	#print(rgc.search(coordiantes))
+
+
 
 #Lot of variables are not specifically normally distributed. Therefore transforming them using log(Base e) transform
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))

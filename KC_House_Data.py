@@ -11,7 +11,8 @@ import statsmodels.formula.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 import math
-import geocoder as gc
+import reverse_geocoder as rgc
+import pprint as pp
 
 train_data = pd.read_csv("./data/kc_house_data.csv", sep = ",", header = 0)
 
@@ -43,14 +44,11 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 
 listofLatLong = []
 #GeoLocation to be added into the picture. Try to convert Latitude and Longitude to location names
-for i in range(0, 4):
-	print(train_data.loc[0,'long'])
-	coordiantes = [train_data.loc[0,'lat'], train_data.loc[0,'long']]
-	print(coordiantes)
-	print(gc.google(coordiantes, method = 'reverse'))
-	#print(rgc.search(coordiantes))
+for i in range(0, len(train_data['lat'])):
+	coordiantes = (train_data.loc[i,'lat'], train_data.loc[i,'long'])
+	train_data.loc[i, 'Location'] = rgc.search(coordiantes, mode = 1)[0].get('name')
 
-
+print(train_data['Location'])
 
 #Lot of variables are not specifically normally distributed. Therefore transforming them using log(Base e) transform
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
@@ -118,5 +116,5 @@ print(fittedModel2.score(polynomialCurveFitting, Y_train))
 formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+HomeAgeinYear+RenovatedafterYears+IsBasementThere+lat+long'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
-print(statsfitted.summary())
+(statsfitted.summary())
 

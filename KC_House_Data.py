@@ -42,19 +42,25 @@ train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm',
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
 #plt.show()
 
-listofLatLong = []
-#GeoLocation to be added into the picture. Try to convert Latitude and Longitude to location names
-for i in range(0, len(train_data['lat'])):
-	coordiantes = (train_data.loc[i,'lat'], train_data.loc[i,'long'])
-	train_data.loc[i, 'Location'] = rgc.search(coordiantes, mode = 1)[0].get('name')
-
-print(train_data['Location'])
 
 #Lot of variables are not specifically normally distributed. Therefore transforming them using log(Base e) transform
 train_data['Log_sqftlot'] = train_data['sqft_lot'].apply(lambda x: np.log(x))
 train_data['Log_price'] = train_data['price'].apply(lambda x: np.log(x))
 train_data['Log_sqftlot15'] = train_data['sqft_lot15'].apply(lambda x: np.log(x))
 
+#GeoLocation to be added into the picture. Try to convert Latitude and Longitude to location names
+for i in range(0, len(train_data['lat'])):
+	coordiantes = (train_data.loc[i,'lat'], train_data.loc[i,'long'])
+	train_data.loc[i, 'Location'] = rgc.search(coordiantes, mode = 1)[0].get('name')
+
+
+mappingDictionary = {}
+
+for k in train_data.Location.unique():
+	print(train_data[train_data['Location'] == k].price.mean())
+	mappingDictionary[k] = train_data[train_data['Location'] == k].price.mean()
+
+train_data['LocationMapping'] = train_data['Location'].apply(lambda x: mappingDictionary.get(x))
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
 train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else -1)

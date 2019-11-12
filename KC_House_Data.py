@@ -57,10 +57,16 @@ for i in range(0, len(train_data['lat'])):
 mappingDictionary = {}
 
 for k in train_data.Location.unique():
-	print(train_data[train_data['Location'] == k].price.mean())
+	#print(train_data[train_data['Location'] == k].price.mean())
 	mappingDictionary[k] = train_data[train_data['Location'] == k].price.mean()
 
 train_data['LocationMapping'] = train_data['Location'].apply(lambda x: mappingDictionary.get(x))
+
+meanOfLocation = train_data['LocationMapping'].mean()
+standardDeviationLocation = train_data['LocationMapping'].std()
+
+train_data['LocationMapping'] = train_data['LocationMapping'].apply(lambda x: ((x-meanOfLocation)/standardDeviationLocation))
+
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
 train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else -1)
@@ -69,8 +75,8 @@ train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x 
 #plt.show()
 
 #Training Vector based on correlation and VIF and Chi Square Test
-columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade', 'HomeAgeinYear', 'RenovatedafterYears','IsBasementThere',
-       'lat', 'long','Log_sqftlot']
+columnsToTrain = ['bedrooms', 'bathrooms', 'sqft_living', 'floors', 'waterfront', 'view', 'condition', 'grade', 'HomeAgeinYear', 'RenovatedafterYears',
+       'Log_sqftlot', 'LocationMapping', 'lat','long']
 
 
 #Predicting the Log Price 
@@ -108,19 +114,29 @@ print(fittedModel2.predict(polynomialCurveFittingTest))
 TestingDataFrame = pd.DataFrame()
 TestingDataFrame['LogPredictedPrice'] = pd.Series(fittedModel2.predict(polynomialCurveFittingTest))
 ActualDataFrame = pd.DataFrame()
+ActualDataFrame['LogActualValues'] = pd.Series(Y_test)
 TestingDataFrame['PredictedValues'] = TestingDataFrame['LogPredictedPrice'].apply(lambda x: math.exp(x))
-ActualDataFrame['ActualValues'] = pd.Series(Y_test).apply(lambda x: math.exp(x))
+ActualDataFrame['ActualValues'] = ActualDataFrame['LogActualValues'].apply(lambda x: math.exp(x))
 
+print(ActualDataFrame)
+
+#rmse = 0
+#for i in range(0, 4):
+#	print('i',TestingDataFrame.loc[i,'PredictedValues'],ActualDataFrame.loc[i, 'ActualValues'])
+#	rmse = rmse + (TestingDataFrame.loc[i,'PredictedValues'] - ActualDataFrame.loc[i, 'ActualValues'])**2
+
+#RootRmse = np.sqrt(rmse/len(TestingDataFrame['PredictedValues']))
+#print(RootRmse)
 np.savetxt("PredictionOfHousePrice.csv", TestingDataFrame['PredictedValues'], delimiter = "," )
 np.savetxt("ActualHousePRice.csv", ActualDataFrame['ActualValues'], delimiter = ",")
 
 print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
-print(fittedModel2.score(polynomialCurveFitting, Y_train))
+print('Polynomial Regression Score', fittedModel2.score(polynomialCurveFittingTest, Y_test))
 
-formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+HomeAgeinYear+RenovatedafterYears+IsBasementThere+lat+long'
+formuala = 'Log_price ~ bedrooms+bathrooms+sqft_living+Log_sqftlot+floors+waterfront+view+condition+grade+HomeAgeinYear+RenovatedafterYears+LocationMapping+lat+long'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
-(statsfitted.summary())
+print(statsfitted.summary())
 

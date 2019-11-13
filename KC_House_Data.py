@@ -127,8 +127,8 @@ print(ActualDataFrame)
 
 #RootRmse = np.sqrt(rmse/len(TestingDataFrame['PredictedValues']))
 #print(RootRmse)
-np.savetxt("PredictionOfHousePrice.csv", TestingDataFrame['PredictedValues'], delimiter = "," )
-np.savetxt("ActualHousePRice.csv", ActualDataFrame['ActualValues'], delimiter = ",")
+#np.savetxt("PredictionOfHousePrice.csv", TestingDataFrame['PredictedValues'], delimiter = "," )
+#np.savetxt("ActualHousePRice.csv", ActualDataFrame['ActualValues'], delimiter = ",")
 
 print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)

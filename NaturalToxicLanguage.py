@@ -8,6 +8,7 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pattern.en import suggest
 import re
+from gensim.models import Word2Vec
 
 def reduce_lengthening(text):
     pattern = re.compile(r"(.)\1{2,}")
@@ -128,25 +129,50 @@ wordcloud = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string)
 
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X = vectorizer.fit_transform(toxic_data['Comments'])
+print(vectorizer.get_feature_names())
+
 wordcloud1 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string1)
+
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X1 = vectorizer.fit_transform(Severetoxic_data['Comments'])
+print(vectorizer.get_feature_names())
 
 wordcloud2 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string2)
 
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X2 = vectorizer.fit_transform(Obscenetoxic_data['Comments'])
+print(vectorizer.get_feature_names())
+
 wordcloud3 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string3)
+
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X3 = vectorizer.fit_transform(Threattoxic_data['Comments'])
+print(vectorizer.get_feature_names())
 
 wordcloud4 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string4)
 
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X4 = vectorizer.fit_transform(Insulttoxic_data['Comments'])
+print(vectorizer.get_feature_names())
+
 wordcloud5 = WordCloud(width = 900, height = 900,
                 background_color ='white',
-                min_font_size = 10).generate(empty_string5)                                                               
+                min_font_size = 10).generate(empty_string5)
+
+vectorizer = TfidfVectorizer(min_df = 0.025)
+X5 = vectorizer.fit_transform(Identitytoxic_data['Comments'])
+print(vectorizer.get_feature_names())
+
 # plot the WordCloud image                        
 plt.figure(figsize = (8, 8), facecolor = None) 
 plt.imshow(wordcloud)

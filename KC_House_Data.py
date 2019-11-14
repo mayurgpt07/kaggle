@@ -70,15 +70,21 @@ standardDeviationLocation = train_data['LocationMapping'].std()
 
 train_data['LocationMapping'] = train_data['LocationMapping'].apply(lambda x: ((x-meanOfLocation)/standardDeviationLocation))
 
+train_data['LivingSpaceAvailable'] = train_data['sqft_living']/train_data['sqft_lot']
+train_data['NeighbourSpace'] = train_data['sqft_living15']/train_data['sqft_lot15']
+train_data['Log_LivingSpaceAvailable'] = train_data['LivingSpaceAvailable'].apply(lambda x: np.log(x))
+train_data['Log_NeighbourSpace'] = train_data['NeighbourSpace'].apply(lambda x: np.log(x))
+#np.savetxt('File.csv', train_data['NeighbourhoodLiving'])
+
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
 train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else -1)
 #plt.hist(train_data['sqft_lot'], color = "red")
-plt.hist(train_data['sqft_living'], color = "skyblue")
+plt.hist(train_data['LivingSpaceAvailable'], color = "skyblue")
 plt.show()
 
 #Training Vector based on correlation and VIF and Chi Square Test
-columnsToTrain = ['Log_sqftLiving', 'waterfront', 'view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_ExtraSpace']
+columnsToTrain = ['Log_sqftLiving', 'waterfront', 'view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace']
 
 
 #Predicting the Log Price 
@@ -135,7 +141,7 @@ print(fittedModel.coef_)
 
 print('Polynomial Regression Score', fittedModel2.score(polynomialCurveFitting, Y_train))
 
-formuala = 'Log_price ~ Log_sqftLiving+floors+waterfront+view+grade+HomeAgeinYear+LocationMapping+Log_ExtraSpace'
+formuala = 'Log_price ~ Log_sqftLiving+floors+waterfront+view+grade+HomeAgeinYear+LocationMapping+Log_LivingSpaceAvailable+Log_NeighbourSpace'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())

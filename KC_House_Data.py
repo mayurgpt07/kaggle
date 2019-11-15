@@ -1,6 +1,6 @@
 from sklearn import linear_model
 from sklearn import model_selection
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
 from datetime import datetime
@@ -30,11 +30,8 @@ train_data['HomeAgeinYear'] = train_data['YearSold'] - train_data['yr_built']
 
 #We derive the Time after which it was renovated
 train_data['RenovatedafterYears'] = train_data['yr_renovated'] - train_data['yr_built']
-train_data['ExtraSpace'] = train_data['sqft_lot'] - train_data['sqft_living']
-train_data['Log_ExtraSpace'] = train_data['ExtraSpace'].apply(lambda x: np.cbrt(x))
 
-#Creating WaterFront as a dummy variable 
-train_data['WaterFrontPresent'] = train_data['waterfront'].apply(lambda x: 1 if x == 1 else -1)
+#Creating WaterFront as a dummy variable
 train_data['IsRenovated'] = train_data['waterfront'].apply(lambda x: 1 if x > 0 else -1)
 
 #Check the correlation matrix with price (the below command only works with jupyter notebook or other software having HTML support)
@@ -78,20 +75,19 @@ train_data['Log_NeighbourSpace'] = train_data['NeighbourSpace'].apply(lambda x: 
 
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
-train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else -1)
+train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else 0)
 #plt.hist(train_data['sqft_lot'], color = "red")
-plt.hist(train_data['LivingSpaceAvailable'], color = "skyblue")
+plt.hist(train_data['grade'], color = "skyblue")
 plt.show()
 
 #Training Vector based on correlation and VIF and Chi Square Test
-columnsToTrain = ['Log_sqftLiving', 'waterfront', 'view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace']
-
+columnsToTrain = ['Log_sqftLiving','waterfront', 'view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace', 'RenovatedafterYears']
 
 #Predicting the Log Price 
 X, y = train_data.loc[:, columnsToTrain], train_data.loc[:, 'Log_price']
 
 vif = pd.DataFrame()
-New_X = X#add_constant(X)
+New_X = add_constant(X)
 vif['VIF Factors']  = [variance_inflation_factor(New_X.values, i) for i in range(New_X.shape[1])]
 vif['Columns'] = New_X.columns
 print(vif)
@@ -105,9 +101,13 @@ polynomialCurveFittingTest = polynomialVariable.fit_transform(X_test)
 
 
 #polynomialVariable.fit(X_train, Y_train)
+#Fitting Lasso Regression
+LassoModel = Lasso(alpha = 0.001, fit_intercept = True, normalize = False, max_iter = 1000)
+LassoModel.fit(polynomialCurveFitting, Y_train)
+#print('Lasso Model Details \n',LassoModel.coef_)
+#print('Lasso Model Score', LassoModel.score(polynomialCurveFitting, Y_train))
 
-
-#Fitting a linear model
+#Fitting a linear model01
 model = LinearRegression()
 fittedModel = model.fit(X_train, Y_train)
 
@@ -141,7 +141,7 @@ print(fittedModel.coef_)
 
 print('Polynomial Regression Score', fittedModel2.score(polynomialCurveFitting, Y_train))
 
-formuala = 'Log_price ~ Log_sqftLiving+floors+waterfront+view+grade+HomeAgeinYear+LocationMapping+Log_LivingSpaceAvailable+Log_NeighbourSpace'
+formuala = 'Log_price ~ Log_sqftLiving+floors+waterfront+view+grade+HomeAgeinYear+LocationMapping+Log_LivingSpaceAvailable+Log_NeighbourSpace+RenovatedafterYears+IsBasementThere'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
 print(statsfitted.summary())

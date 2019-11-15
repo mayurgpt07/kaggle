@@ -11,7 +11,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from pattern.en import suggest
 import re
 from gensim.models import Word2Vec
-from numba import jit, cuda
 
 
 def reduce_lengthening(text):
@@ -25,12 +24,11 @@ def top_tfidf_feats(row, features, top_n=20):
     df.columns = ['feature', 'tfidf']
     return df
 
-@jit(target = 'cuda')
 def createFeatures(train_data):
 	toxic_data = pd.DataFrame()
 	toxic_data['Comments'] = train_data.loc[:,'RemovedStopWords']
-	toxic_data['Comments'].head(10)
-	toxic_data['ClassResult'] = train_data[train_data['toxic'] == 1]['toxic']
+	print(toxic_data['Comments'].head(10))
+	toxic_data['ClassResult'] = train_data.loc[:, 'toxic']
 	toxic_data['NumberOfSentences'] = toxic_data['Comments'].apply(lambda x: len(re.findall('\n',str(x.strip())))+1)
 	toxic_data['MeanLengthOfSentences'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split("\n")]))
 	toxic_data['MeanLengthOfWords'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split(" ")]))
@@ -98,8 +96,8 @@ toxic_data['NumberOfUniqueWords'] = toxic_data['Comments'].apply(lambda x: len(s
 toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))'''
 
 #toxic_data.to_csv('IntermediateDataFrame.csv', sep = ',', header = True)
-createFeatures(train_data)
-
+toxic_data = createFeatures(train_data)
+toxic_data.to_csv('IntermediateDataFrame.csv', sep = ',', header = True)
 '''print(toxic_data.head())
 
 Severetoxic_data['Comments'] = train_data[train_data['severe_toxic'] == 1]['RemovedStopWords']
@@ -182,7 +180,8 @@ X, y = toxic_data.loc[:, trainingColumns], toxic_data.loc[:, testingColumns]
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
 
 classifier = SVC(gamma = 'auto')
-
+classifier.fit(X_train, Y_train)
+print(classifier.score())
 '''wordcloud1 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string1)

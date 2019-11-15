@@ -1,18 +1,44 @@
 import pandas as pd
 import numpy as np
 from wordcloud import WordCloud 
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from sklearn import model_selection
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from sklearn.svm import SVC
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pattern.en import suggest
 import re
 from gensim.models import Word2Vec
+from numba import jit, cuda
+
 
 def reduce_lengthening(text):
     pattern = re.compile(r"(.)\1{2,}")
     return pattern.sub(r"\1\1", text)
+
+def top_tfidf_feats(row, features, top_n=20):
+    topn_ids = np.argsort(row)[::-1][:top_n]
+    top_feats = [(features[i], row[i]) for i in topn_ids]
+    df = pd.DataFrame(top_feats)
+    df.columns = ['feature', 'tfidf']
+    return df
+
+@jit(target = 'cuda')
+def createFeatures(train_data):
+	toxic_data = pd.DataFrame()
+	toxic_data['Comments'] = train_data.loc[:,'RemovedStopWords']
+	toxic_data['Comments'].head(10)
+	toxic_data['ClassResult'] = train_data[train_data['toxic'] == 1]['toxic']
+	toxic_data['NumberOfSentences'] = toxic_data['Comments'].apply(lambda x: len(re.findall('\n',str(x.strip())))+1)
+	toxic_data['MeanLengthOfSentences'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split("\n")]))
+	toxic_data['MeanLengthOfWords'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split(" ")]))
+	toxic_data['NumberOfUniqueWords'] = toxic_data['Comments'].apply(lambda x: len(set(x.split())))
+	toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))
+	return toxic_data
+
+
 
 train_data = pd.read_csv('./jigsaw-toxic-comment-classification-challenge/train.csv', sep = ',', header = 0)
 train_data['comment_text'].fillna('unknown', inplace = True)
@@ -51,64 +77,73 @@ for i in train_data['CommentTokenize']:
 train_data['RemovedStopWords'] = pd.Series(sentenceList)
 train_data['RemovedStopWords'] = train_data['RemovedStopWords'].apply(lambda x: re.sub('\s+', ' ', x.strip()))
 
-vectorizer = TfidfVectorizer(min_df = 100, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 150, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 Y = vectorizer.fit_transform(train_data['RemovedStopWords'])
-print(vectorizer.get_feature_names())
+#print(vectorizer.get_feature_names())
 
-toxic_data = pd.DataFrame()
-Severetoxic_data = pd.DataFrame()
+#toxic_data = pd.DataFrame()
+'''Severetoxic_data = pd.DataFrame()
 Obscenetoxic_data = pd.DataFrame()
 Threattoxic_data = pd.DataFrame()
 Insulttoxic_data = pd.DataFrame()
-Identitytoxic_data = pd.DataFrame()
+Identitytoxic_data = pd.DataFrame()'''
 
-toxic_data['Comments'] = train_data[train_data['toxic'] == 1]['RemovedStopWords']
-toxic_data['lengthOfLength'] = toxic_data['Comments'].apply(lambda x: len(x.strip()))
-toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(toxic_data['lengthOfLength'], color = "red")
-plt.show()
+'''toxic_data['Comments'] = train_data.loc[:,'RemovedStopWords']
+toxic_data['Comments'].head(10)
+toxic_data['ClassResult'] = train_data[train_data['toxic'] == 1]['toxic']
+toxic_data['NumberOfSentences'] = toxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x.strip())))+1)
+toxic_data['MeanLengthOfSentences'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split("\n")]))
+toxic_data['MeanLengthOfWords'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split(" ")]))
+toxic_data['NumberOfUniqueWords'] = toxic_data['Comments'].apply(lambda x: len(set(x.split())))
+toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))'''
 
-print(toxic_data.head())
+#toxic_data.to_csv('IntermediateDataFrame.csv', sep = ',', header = True)
+createFeatures(train_data)
+
+'''print(toxic_data.head())
 
 Severetoxic_data['Comments'] = train_data[train_data['severe_toxic'] == 1]['RemovedStopWords']
-Severetoxic_data['lengthOfLength'] = Severetoxic_data['Comments'].apply(lambda x: len(x.strip()))
+Severetoxic_data['NumberOfSentences'] = Severetoxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x)))+1)
+Severetoxic_data['MeanLengthOf Sentences'] = Severetoxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.split()]))
+Severetoxic_data['NumberOfUniqueWords'] = Severetoxic_data['Comments'].apply(lambda x: len(set(x.split())))
 Severetoxic_data['numberOfWords'] = Severetoxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(Severetoxic_data['lengthOfLength'], color = "red")
-plt.show()
 
 Obscenetoxic_data['Comments'] = train_data[train_data['obscene'] == 1]['RemovedStopWords']
-Obscenetoxic_data['lengthOfLength'] = Obscenetoxic_data['Comments'].apply(lambda x: len(x.strip()))
+Obscenetoxic_data['NumberOfSentences'] = Obscenetoxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x)))+1)
+Obscenetoxic_data['MeanLengthOf Sentences'] = Obscenetoxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.split()]))
+Obscenetoxic_data['NumberOfUniqueWords'] = Obscenetoxic_data['Comments'].apply(lambda x: len(set(x.split())))
 Obscenetoxic_data['numberOfWords'] = Obscenetoxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(Obscenetoxic_data['lengthOfLength'], color = "red")
-plt.show()
+
 
 
 Threattoxic_data['Comments'] = train_data[train_data['threat'] == 1]['RemovedStopWords']
-Threattoxic_data['lengthOfLength'] = Threattoxic_data['Comments'].apply(lambda x: len(x.strip()))
+Threattoxic_data['NumberOfSentences'] = Threattoxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x)))+1)
+Threattoxic_data['MeanLengthOf Sentences'] = Threattoxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.split()]))
+Threattoxic_data['NumberOfUniqueWords'] = Threattoxic_data['Comments'].apply(lambda x: len(set(x.split())))
 Threattoxic_data['numberOfWords'] = Threattoxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(Threattoxic_data['lengthOfLength'], color = "red")
-plt.show()
 
 
 Insulttoxic_data['Comments'] = train_data[train_data['insult'] == 1]['RemovedStopWords']
-Insulttoxic_data['lengthOfLength'] = Insulttoxic_data['Comments'].apply(lambda x: len(x.strip()))
+Insulttoxic_data['NumberOfSentences'] = Insulttoxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x)))+1)
+Insulttoxic_data['MeanLengthOf Sentences'] = Insulttoxic_data1['Comments'].apply(lambda x: np.mean([len(w) for w in x.split()]))
+Insulttoxic_data['NumberOfUniqueWords'] = Insulttoxic_data['Comments'].apply(lambda x: len(set(x.split())))
 Insulttoxic_data['numberOfWords'] = Insulttoxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(Insulttoxic_data['lengthOfLength'], color = "red")
-plt.show()
 
 
 Identitytoxic_data['Comments'] = train_data[train_data['identity_hate'] == 1]['RemovedStopWords']
-Identitytoxic_data['lengthOfLength'] = Identitytoxic_data['Comments'].apply(lambda x: len(x.strip()))
+Identitytoxic_data['NumberOfSentences'] = Identitytoxic_data['Comments'].apply(lambda x: len(re.findall("\n",str(x)))+1)
+Identitytoxic_data['MeanLengthOf Sentences'] = Identitytoxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.split()]))
+Identitytoxic_data['NumberOfUniqueWords'] = Identitytoxic_data['Comments'].apply(lambda x: len(set(x.split())))
 Identitytoxic_data['numberOfWords'] = Identitytoxic_data['Comments'].apply(lambda x: len(x.split()))
-plt.hist(Identitytoxic_data['lengthOfLength'], color = "red")
-plt.show()
+'''
 
 
 empty_string = ''
 for i in toxic_data['Comments']:
 	empty_string = empty_string.strip() + ' ' + i.strip()
 
-empty_string1 = ''
+print('Length of Total Comments', len(empty_string))
+'''empty_string1 = ''
 for i in Severetoxic_data['Comments']:
 	empty_string1 = empty_string1.strip() + ' ' + i.strip()
 
@@ -126,18 +161,29 @@ for i in Insulttoxic_data['Comments']:
 
 empty_string5 = ''
 for i in Identitytoxic_data['Comments']:
-	empty_string5 = empty_string5.strip() + ' ' + i.strip()
+	empty_string5 = empty_string5.strip() + ' ' + i.strip()'''
 
 
 wordcloud = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string)
 
-vectorizer = TfidfVectorizer(min_df = 150, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 180, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X = vectorizer.fit_transform(toxic_data['Comments'])
-print(vectorizer.get_feature_names())
+print('Length of features', len(vectorizer.get_feature_names()))
+train_ngrams = vectorizer.transform(toxic_data['Comments'])
 
-wordcloud1 = WordCloud(width = 900, height = 900,
+print(train_ngrams.shape())
+trainingColumns = ['NumberOfSentences', 'NumberOfUniqueWords', 'numberOfWords', 'MeanLengthOfSentences']
+testingColumns = ['ClassResult']
+
+X, y = toxic_data.loc[:, trainingColumns], toxic_data.loc[:, testingColumns]
+
+X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
+
+classifier = SVC(gamma = 'auto')
+
+'''wordcloud1 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string1)
 
@@ -149,7 +195,7 @@ wordcloud2 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string2)
 
-vectorizer = TfidfVectorizer(min_df = 150, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 180, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X2 = vectorizer.fit_transform(Obscenetoxic_data['Comments'])
 print(vectorizer.get_feature_names())
 
@@ -157,7 +203,7 @@ wordcloud3 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string3)
 
-vectorizer = TfidfVectorizer(min_df = 80, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 70, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X3 = vectorizer.fit_transform(Threattoxic_data['Comments'])
 print(vectorizer.get_feature_names())
 
@@ -165,7 +211,7 @@ wordcloud4 = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string4)
 
-vectorizer = TfidfVectorizer(min_df = 150, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 180, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X4 = vectorizer.fit_transform(Insulttoxic_data['Comments'])
 print(vectorizer.get_feature_names())
 
@@ -175,7 +221,7 @@ wordcloud5 = WordCloud(width = 900, height = 900,
 
 vectorizer = TfidfVectorizer(min_df = 80, strip_accents = 'unicode', ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X5 = vectorizer.fit_transform(Identitytoxic_data['Comments'])
-print(vectorizer.get_feature_names())
+print(vectorizer.get_feature_names())'''
 
 # plot the WordCloud image                        
 plt.figure(figsize = (8, 8), facecolor = None) 
@@ -184,7 +230,7 @@ plt.axis("off")
 plt.tight_layout(pad = 0)
 plt.show()
 
-plt.figure(figsize = (8, 8), facecolor = None)
+'''plt.figure(figsize = (8, 8), facecolor = None)
 plt.imshow(wordcloud1)
 plt.axis("off") 
 plt.tight_layout(pad = 0)
@@ -223,4 +269,4 @@ plt.show()
 #print(X.shape)
 
 #test_data['RemovedStopWords'] = pd.Series(sentenceListTest)
-print(train_data.head())
+print(train_data.head())'''

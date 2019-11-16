@@ -3,6 +3,7 @@ from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.svm import SVR
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -34,9 +35,6 @@ train_data['RenovatedafterYears'] = train_data['yr_renovated'] - train_data['yr_
 #Creating WaterFront as a dummy variable
 train_data['IsRenovated'] = train_data['waterfront'].apply(lambda x: 1 if x > 0 else -1)
 
-#Check the correlation matrix with price (the below command only works with jupyter notebook or other software having HTML support)
-#The price is not normally distributed in the problem
-train_data.corr().loc[:,'id':'price'].style.background_gradient(cmap='coolwarm', axis=None)
 
 #pd.plotting.scatter_matrix(train_data.loc[:,'price':'floors'], alpha = 0.2, figsize = (20, 20), diagonal = 'kde')
 #plt.show()
@@ -71,17 +69,22 @@ train_data['LivingSpaceAvailable'] = train_data['sqft_living']/train_data['sqft_
 train_data['NeighbourSpace'] = train_data['sqft_living15']/train_data['sqft_lot15']
 train_data['Log_LivingSpaceAvailable'] = train_data['LivingSpaceAvailable'].apply(lambda x: np.log(x))
 train_data['Log_NeighbourSpace'] = train_data['NeighbourSpace'].apply(lambda x: np.log(x))
-#np.savetxt('File.csv', train_data['NeighbourhoodLiving'])
+
 
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
-train_data['IsBasementThere'] = train_data['sqft_above'].apply(lambda x: 1 if x >= 1 else 0)
+train_data['IsBasementThere'] = train_data['sqft_basement'].apply(lambda x: 1 if x >= 1 else -1)
 #plt.hist(train_data['sqft_lot'], color = "red")
-plt.hist(train_data['grade'], color = "skyblue")
-plt.show()
+#plt.hist(train_data['BasementOccupancy'], color = "skyblue")
+#plt.show()
+
+
+#Check the correlation matrix with price (the below command only works with jupyter notebook or other software having HTML support)
+train_data.corr().loc[:,['Log_price', 'price']].style.background_gradient(cmap='coolwarm', axis=None)
+
 
 #Training Vector based on correlation and VIF and Chi Square Test
-columnsToTrain = ['Log_sqftLiving','waterfront', 'view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace', 'RenovatedafterYears']
+columnsToTrain = ['Log_sqftLiving','waterfront','floors','view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace', 'RenovatedafterYears']
 
 #Predicting the Log Price 
 X, y = train_data.loc[:, columnsToTrain], train_data.loc[:, 'Log_price']
@@ -100,12 +103,26 @@ polynomialCurveFitting = polynomialVariable.fit_transform(X_train)
 polynomialCurveFittingTest = polynomialVariable.fit_transform(X_test)
 
 
+Y_test_Exponential = [math.exp(x) for x in Y_test]
+
 #polynomialVariable.fit(X_train, Y_train)
 #Fitting Lasso Regression
 LassoModel = Lasso(alpha = 0.001, fit_intercept = True, normalize = False, max_iter = 1000)
 LassoModel.fit(polynomialCurveFitting, Y_train)
 #print('Lasso Model Details \n',LassoModel.coef_)
 #print('Lasso Model Score', LassoModel.score(polynomialCurveFitting, Y_train))
+
+#Support Vector Machine	Regressions
+SupportVectorModel = SVR(kernel = 'polynomial', degree = 3)
+fittedModelSVM = SupportVectorModel.fit(polynomialCurveFitting, Y_train)
+print('SupportVectorModel Score', SupportVectorModel.score(polynomialCurveFitting, Y_train))
+#scoresSVM = model_selection.cross_val_score(fittedModelSVM, polynomialCurveFitting, Y_train, cv = 10)
+#print(scoresSVM)
+
+PredictSVMData = fittedModelSVM.predict(polynomialCurveFittingTest)
+PredictSVMDataExponential = [math.exp(x) for x in PredictSVMData]
+
+print('SVM Root mean square Error', np.sqrt(mean_squared_error(Y_test_Exponential, PredictSVMDataExponential)))
 
 #Fitting a linear model01
 model = LinearRegression()
@@ -125,24 +142,25 @@ print('RootMeanSquare Training', np.sqrt(mean_squared_error(Y_train_Exponential,
 PredictedTestData = fittedModel2.predict(polynomialCurveFittingTest)
 
 PredictedTestDataExponential = [math.exp(x) for x in PredictedTestData]
-Y_test_Exponential = [math.exp(x) for x in Y_test]
+
 
 print('RootMeanSquare Testing', np.sqrt(mean_squared_error(Y_test_Exponential, PredictedTestDataExponential)))
 
-TestingDataFrame = pd.DataFrame()
-TestingDataFrame['LogPredictedPrice'] = pd.Series(fittedModel2.predict(polynomialCurveFittingTest))
-ActualDataFrame = pd.DataFrame()
-ActualDataFrame['LogActualValues'] = pd.Series(Y_test)
-TestingDataFrame['PredictedValues'] = TestingDataFrame['LogPredictedPrice'].apply(lambda x: math.exp(x))
-ActualDataFrame['ActualValues'] = ActualDataFrame['LogActualValues'].apply(lambda x: math.exp(x))
+scores = model_selection.cross_val_score(model2, polynomialCurveFitting, Y_train, cv = 10)
+scoresTest = model_selection.cross_val_score(model2, polynomialCurveFittingTest, Y_test, cv = 10)
 
+print('Scores for Train and Test', np.mean(scores),scoresTest)
 print(fittedModel.score(X_train, Y_train))
 print(fittedModel.coef_)
 
 print('Polynomial Regression Score', fittedModel2.score(polynomialCurveFitting, Y_train))
 
-formuala = 'Log_price ~ Log_sqftLiving+floors+waterfront+view+grade+HomeAgeinYear+LocationMapping+Log_LivingSpaceAvailable+Log_NeighbourSpace+RenovatedafterYears+IsBasementThere'
+formuala = 'Log_price ~ Log_sqftLiving+waterfront+floors+view+grade+HomeAgeinYear+LocationMapping+Log_LivingSpaceAvailable+Log_NeighbourSpace+RenovatedafterYears'
 statisticalModel = sm.ols(formuala, data = train_data)
 statsfitted = statisticalModel.fit()
+predictedStats = statsfitted.predict(X_test)
+#print(predictedStats)
+predictedStatsExponential = [math.exp(x) for x in predictedStats]
+print('Root Mean Square OLS', np.sqrt(mean_squared_error(Y_test_Exponential, predictedStatsExponential)))
 print(statsfitted.summary())
 

@@ -3,7 +3,7 @@ from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, Lasso
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.svm import SVR
+from sklearn.kernel_approximation import Nystroem
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -106,18 +106,18 @@ polynomialCurveFittingTest = polynomialVariable.fit_transform(X_test)
 Y_test_Exponential = [math.exp(x) for x in Y_test]
 
 #polynomialVariable.fit(X_train, Y_train)
-#Fitting Lasso Regression
-LassoModel = Lasso(alpha = 0.001, fit_intercept = True, normalize = False, max_iter = 1000)
-LassoModel.fit(polynomialCurveFitting, Y_train)
-#print('Lasso Model Details \n',LassoModel.coef_)
-#print('Lasso Model Score', LassoModel.score(polynomialCurveFitting, Y_train))
 
 #Support Vector Machine	Regressions
-SupportVectorModel = SVR(kernel = 'polynomial', degree = 3)
+SupportVectorModel = LinearSVR()
 fittedModelSVM = SupportVectorModel.fit(polynomialCurveFitting, Y_train)
-print('SupportVectorModel Score', SupportVectorModel.score(polynomialCurveFitting, Y_train))
-#scoresSVM = model_selection.cross_val_score(fittedModelSVM, polynomialCurveFitting, Y_train, cv = 10)
-#print(scoresSVM)
+
+scoresSVM = model_selection.cross_val_score(fittedModelSVM, polynomialCurveFitting, Y_train, cv = 10)
+print(scoresSVM)
+
+
+print('SupportVectorModel Score Train', SupportVectorModel.score(polynomialCurveFitting, Y_train))
+print('SupportVectorModel Score Test', SupportVectorModel.score(polynomialCurveFittingTest, Y_test))
+
 
 PredictSVMData = fittedModelSVM.predict(polynomialCurveFittingTest)
 PredictSVMDataExponential = [math.exp(x) for x in PredictSVMData]

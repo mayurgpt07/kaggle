@@ -24,7 +24,7 @@ def top_tfidf_feats(row, features, top_n=20):
     df.columns = ['feature', 'tfidf']
     return df
 
-def createFeatures(train_data):
+'''def createFeatures(train_data):
 	toxic_data = pd.DataFrame()
 	toxic_data['Comments'] = train_data.loc[:,'new_Comment_Text']
 	print(toxic_data['Comments'].head(10))
@@ -34,7 +34,7 @@ def createFeatures(train_data):
 	toxic_data['MeanLengthOfWords'] = toxic_data['Comments'].apply(lambda x: np.mean([len(w) for w in x.strip().split(" ")]))
 	toxic_data['NumberOfUniqueWords'] = toxic_data['Comments'].apply(lambda x: len(set(x.split())))
 	toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))
-	return toxic_data
+	return toxic_data'''
 
 
 
@@ -94,7 +94,9 @@ toxic_data['NumberOfUniqueWords'] = toxic_data['Comments'].apply(lambda x: len(s
 toxic_data['numberOfWords'] = toxic_data['Comments'].apply(lambda x: len(x.split()))'''
 
 #toxic_data.to_csv('IntermediateDataFrame.csv', sep = ',', header = True)
-toxic_data = pd.read_csv('./IntermediateDataFrame.csv', sep = ',', header = 0)
+toxic_data_pandas = pd.read_csv('./IntermediateDataFrame.csv', sep = ',', header = 0)
+
+toxic_data = cudf.from_pandas(toxic_data_pandas)
 toxic_data['Comment_Text'] = toxic_data['Comments'].apply(lambda x: re.sub('\ |\!|\/|\;|\:|\=|\"|\:|\]|\[|\<|\>|\{|\}|\'|\?|\.|\,|\|',' ', x))
 
 toxic_data['new_Comment_Text'] = toxic_data['Comment_Text'].apply(lambda x: re.sub('\s+',' ',x.strip().lower()))
@@ -191,9 +193,13 @@ X = vectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of features', len(vectorizer.get_feature_names()))
 train_ngrams = vectorizer.transform(toxic_data['RemovedStopWords'])
 
+print(type(train_ngrams))
+print(np.shape(train_ngrams))
+print(np.ndim(train_ngrams))
 
 trainingColumns = ['NumberOfSentences', 'NumberOfUniqueWords', 'numberOfWords', 'MeanLengthOfSentences']
 testingColumns = ['ClassResult']
+
 
 X, y = toxic_data.loc[:, trainingColumns], toxic_data.loc[:, testingColumns]
 

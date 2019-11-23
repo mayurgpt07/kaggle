@@ -3,7 +3,6 @@ from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.kernel_approximation import Nystroem
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -107,7 +106,7 @@ Y_test_Exponential = [math.exp(x) for x in Y_test]
 
 
 #Ridge Regression
-RidgeModel = Ridge(alpha = 50.0)
+RidgeModel = Ridge(alpha = 250.0, solver = 'auto', fit_intercept = True)
 fittedRidgeModel = RidgeModel.fit(polynomialCurveFitting, Y_train)
 scoreRidge = model_selection.cross_val_score(fittedRidgeModel, polynomialCurveFitting, Y_train, cv = 10) 
 
@@ -120,26 +119,8 @@ PredictedRidgeDataExponential = [math.exp(x) for x in PredictedRidgeData]
 
 print('Root mean square Value Train Ridge Regression', np.sqrt(mean_squared_error(Y_train_Exponential, PredictedRidgeDataTrainExponential)))
 print('Root mean square Value Test Ridge Regression', np.sqrt(mean_squared_error(Y_test_Exponential, PredictedRidgeDataExponential)))
-#polynomialVariable.fit(X_train, Y_train)
 
-#Support Vector Machine	Regressions
-'''SupportVectorModel = LinearSVR()
-fittedModelSVM = SupportVectorModel.fit(polynomialCurveFitting, Y_train)
-
-scoresSVM = model_selection.cross_val_score(fittedModelSVM, polynomialCurveFitting, Y_train, cv = 10)
-print(scoresSVM)
-
-
-print('SupportVectorModel Score Train', SupportVectorModel.score(polynomialCurveFitting, Y_train))
-print('SupportVectorModel Score Test', SupportVectorModel.score(polynomialCurveFittingTest, Y_test))
-
-
-PredictSVMData = fittedModelSVM.predict(polynomialCurveFittingTest)
-PredictSVMDataExponential = [math.exp(x) for x in PredictSVMData]
-
-print('SVM Root mean square Error', np.sqrt(mean_squared_error(Y_test_Exponential, PredictSVMDataExponential)))
-'''
-#Fitting a linear model01
+#Fitting a linear model
 model = LinearRegression()
 fittedModel = model.fit(X_train, Y_train)
 

@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt 
 import statsmodels.formula.api as sm
+from statsmodels.gam.api import GLMGam, BSplines
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 import math

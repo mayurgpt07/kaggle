@@ -86,12 +86,12 @@ wordcloud = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string)
 
-vectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', ngram_range = (2,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', analyzer = 'word',token_pattern=r'\w{1,}',ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
 X = vectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of features', len(vectorizer.get_feature_names()))
 train_ngrams = vectorizer.transform(toxic_data['RemovedStopWords'])
 
-wordVectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', ngram_range = (1,1), stop_words = 'english', sublinear_tf = True, max_features = 10000)
+wordVectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', analyzer = 'char', ngram_range = (2,6) , stop_words = 'english', sublinear_tf = True, max_features = 10000)
 Y = wordVectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of one word features', len(wordVectorizer.get_feature_names()))
 train_1grams = wordVectorizer.transform(toxic_data['RemovedStopWords'])
@@ -107,18 +107,24 @@ print(toxic_data[trainingColumns].head(5))
 print(type(train_ngrams))
 
 print(type(train_1grams))
-trainingFeatures = hstack((toxic_data[trainingColumns], train_ngrams, train_1grams)).tocsr()
+trainingFeatures = hstack((train_ngrams, train_1grams)).tocsr()
 trainingFeatureDataFrame = pd.DataFrame(trainingFeatures.toarray())
 
 X, y = trainingFeatureDataFrame, toxic_data[testingColumns]
 
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
 
-LogisticModel = LogisticRegression(C = 0.1)
+LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet')
 FitteddLogistic = LogisticModel.fit(X_train, Y_train)
 crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 5, scoring = 'roc_auc')
 
 print('crossValidationScore', crossValidationScore, np.mean(crossValidationScore))
+
+SupportVectorModel = SVC(kernel = 'rbf', C = 0.1, cache_size = 10000.0, decision_function_shape = 'ovo')
+FittedSVModel = SupportVectorModel.fit(X_train, Y_train)
+crossValidationScoreforSV = cross_val_score(SupportVectorModel, X_train, Y_train, cv = 5)
+
+print('Cross Validation Score Support Vector', crossValidationScoreforSV, np.mean(crossValidationScoreforSV))
 
 # plot the WordCloud image                        
 plt.figure(figsize = (8, 8), facecolor = None) 

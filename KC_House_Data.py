@@ -1,7 +1,7 @@
 from sklearn import linear_model
 from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.metrics import mean_squared_error, r2_score
 from datetime import datetime
 import pandas as pd
@@ -63,13 +63,16 @@ train_data['LocationMapping'] = train_data['Location'].apply(lambda x: mappingDi
 meanOfLocation = train_data['LocationMapping'].mean()
 standardDeviationLocation = train_data['LocationMapping'].std()
 
+meanOfPrice = train_data['Log_price'].mean()
+standardDeviationOfPrice = train_data['Log_price'].std()
+
 train_data['LocationMapping'] = train_data['LocationMapping'].apply(lambda x: ((x-meanOfLocation)/standardDeviationLocation))
 
 train_data['LivingSpaceAvailable'] = train_data['sqft_living']/train_data['sqft_lot']
 train_data['NeighbourSpace'] = train_data['sqft_living15']/train_data['sqft_lot15']
 train_data['Log_LivingSpaceAvailable'] = train_data['LivingSpaceAvailable'].apply(lambda x: np.log(x))
 train_data['Log_NeighbourSpace'] = train_data['NeighbourSpace'].apply(lambda x: np.log(x))
-
+#train_data['ScaledLog_Price'] = train_data['Log_price'].apply(lambda x: ((x-meanOfPrice)/standardDeviationOfPrice))
 
 #The Value of VIF tells that there is a collinearity between the Living space and above space. Assuming that both will be same if basement is not there.
 #Therefore removing basement values and converting it into a variable to express the presence or absence of it
@@ -80,11 +83,19 @@ train_data['IsBasementThere'] = train_data['sqft_basement'].apply(lambda x: 1 if
 
 
 #Check the correlation matrix with price (the below command only works with jupyter notebook or other software having HTML support)
-train_data.corr().loc[:,['Log_price', 'price']].style.background_gradient(cmap='coolwarm', axis=None)
+#train_data.corr().loc[:,['Log_price', 'price']].style.background_gradient(cmap='coolwarm', axis=None)
 
+scaler = StandardScaler(with_mean = True, with_std = True)
 
 #Training Vector based on correlation and VIF and Chi Square Test
 columnsToTrain = ['Log_sqftLiving','waterfront','floors','view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace', 'RenovatedafterYears']
+
+scaledData = scaler.fit(train_data.loc[:, columnsToTrain])
+#scaleTest = scaler.fit(train_data.loc[:, 'Log_price'])
+print('Print the scaled version',scaledData)
+scaledArray = scaler.transform(train_data.loc[:, columnsToTrain])
+
+scaledDataFrame = pd.DataFrame(scaledArray, columns = ['Log_sqftLiving','waterfront','floors','view', 'grade', 'HomeAgeinYear','LocationMapping', 'Log_LivingSpaceAvailable', 'Log_NeighbourSpace', 'RenovatedafterYears'])
 
 #Predicting the Log Price 
 X, y = train_data.loc[:, columnsToTrain], train_data.loc[:, 'Log_price']
@@ -101,6 +112,7 @@ X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_s
 polynomialVariable = PolynomialFeatures(degree = 3)
 polynomialCurveFitting = polynomialVariable.fit_transform(X_train)
 polynomialCurveFittingTest = polynomialVariable.fit_transform(X_test)
+
 
 Y_train_Exponential = [math.exp(x) for x in Y_train]
 Y_test_Exponential = [math.exp(x) for x in Y_test]

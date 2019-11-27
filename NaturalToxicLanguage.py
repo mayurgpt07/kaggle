@@ -86,12 +86,12 @@ wordcloud = WordCloud(width = 900, height = 900,
                 background_color ='white',
                 min_font_size = 10).generate(empty_string)
 
-vectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', analyzer = 'word',token_pattern=r'\w{1,}',ngram_range = (1,4), stop_words = 'english', sublinear_tf = True)
+vectorizer = TfidfVectorizer(min_df = 30,strip_accents = 'unicode', analyzer = 'word',token_pattern=r'\w{1,}',ngram_range = (1,3), stop_words = 'english', sublinear_tf = True, max_features = 40000)
 X = vectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of features', len(vectorizer.get_feature_names()))
 train_ngrams = vectorizer.transform(toxic_data['RemovedStopWords'])
 
-wordVectorizer = TfidfVectorizer(min_df = 50, strip_accents = 'unicode', analyzer = 'char', ngram_range = (2,6) , stop_words = 'english', sublinear_tf = True, max_features = 10000)
+wordVectorizer = TfidfVectorizer(strip_accents = 'unicode', analyzer = 'char', ngram_range = (2,6) , stop_words = 'english', sublinear_tf = True, max_features = 10000)
 Y = wordVectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of one word features', len(wordVectorizer.get_feature_names()))
 train_1grams = wordVectorizer.transform(toxic_data['RemovedStopWords'])
@@ -114,7 +114,7 @@ X, y = trainingFeatureDataFrame, toxic_data[testingColumns]
 
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
 
-LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet')
+LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet', solver = 'saga')
 FitteddLogistic = LogisticModel.fit(X_train, Y_train)
 crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 5, scoring = 'roc_auc')
 

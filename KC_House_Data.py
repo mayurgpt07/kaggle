@@ -2,7 +2,7 @@ from sklearn import linear_model
 from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -10,12 +10,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 from scipy.stats import norm
 import statsmodels.formula.api as sm
-from statsmodels.gam.api import GLMGam, BSplines
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 import math
 import reverse_geocoder as rgc
-import pprint as pp
 
 train_data = pd.read_csv("./data/kc_house_data.csv", sep = ",", header = 0)
 
@@ -222,7 +220,7 @@ predictedStats = statsfitted.predict(X_test)
 predictedStatsExponential = [math.exp(x) for x in predictedStats]
 
 
-print('Testing Root Mean Square Using Stats Model', np.sqrt(mean_squared_error(Y_test_Exponential, predictedStatsExponential)))
+print('Testing Root Mean Square Linear Model', np.sqrt(mean_squared_error(Y_test_Exponential, predictedStatsExponential)))
 print('\n')
 print('Statistical Summary of Model with an adjusted R^2 = 80% \n', statsfitted.summary())
 print('\n')

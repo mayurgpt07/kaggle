@@ -107,14 +107,14 @@ print(toxic_data[trainingColumns].head(5))
 print(type(train_ngrams))
 
 print(type(train_1grams))
-trainingFeatures = hstack((train_ngrams, train_1grams)).tocsr()
+trainingFeatures = hstack((toxic_data[trainingColumns],train_ngrams, train_1grams)).tocsr()
 trainingFeatureDataFrame = pd.DataFrame(trainingFeatures.toarray())
 
 X, y = trainingFeatureDataFrame, toxic_data[testingColumns]
 
 X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_size = 0.33)
 
-LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet', solver = 'saga')
+LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet', solver = 'saga', l1_ratio = 0.5)
 FitteddLogistic = LogisticModel.fit(X_train, Y_train)
 crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 5, scoring = 'roc_auc')
 

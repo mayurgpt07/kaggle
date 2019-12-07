@@ -71,20 +71,18 @@ lemmatizer = WordNetLemmatizer()
 toxic_data_read = pd.read_csv('./IntermediateDataFrame.csv', sep = ',', header = 0)
 
 toxic_data = featureEngineer(toxic_data_read.sample(n=100000))
+toxic_data.to_csv('./CompletedFeatures.csv', sep = ',', header = True)
 
 
-#toxic_data.to_csv('IntermediateDataFrame.csv', sep = ',', header = True)
+# empty_string = ''
+# for i in toxic_data['RemovedStopWords']:
+# 	empty_string = empty_string.strip() + ' ' + i.strip()
 
+# print('Length of Total Comments', len(empty_string))
 
-empty_string = ''
-for i in toxic_data['RemovedStopWords']:
-	empty_string = empty_string.strip() + ' ' + i.strip()
-
-print('Length of Total Comments', len(empty_string))
-
-wordcloud = WordCloud(width = 900, height = 900,
-                background_color ='white',
-                min_font_size = 10).generate(empty_string)
+# wordcloud = WordCloud(width = 900, height = 900,
+#                 background_color ='white',
+#                 min_font_size = 10).generate(empty_string)
 
 vectorizer = TfidfVectorizer(min_df = 30,strip_accents = 'unicode', analyzer = 'word',token_pattern=r'\w{1,}',ngram_range = (1,3), stop_words = 'english', sublinear_tf = True, max_features = 40000)
 X = vectorizer.fit_transform(toxic_data['RemovedStopWords'])
@@ -96,17 +94,17 @@ Y = wordVectorizer.fit_transform(toxic_data['RemovedStopWords'])
 print('Length of one word features', len(wordVectorizer.get_feature_names()))
 train_1grams = wordVectorizer.transform(toxic_data['RemovedStopWords'])
 
-print(type(train_ngrams))
-print(np.shape(train_ngrams))
-print(np.ndim(train_ngrams))
+# print(type(train_ngrams))
+# print(np.shape(train_ngrams))
+# print(np.ndim(train_ngrams))
 
 trainingColumns = ['NumberOfSentences', 'NumberOfUniqueWords', 'numberOfWords', 'MeanLengthOfSentences']
 testingColumns = ['ClassResult']
 
-print(toxic_data[trainingColumns].head(5))
-print(type(train_ngrams))
+# print(toxic_data[trainingColumns].head(5))
+# print(type(train_ngrams))
 
-print(type(train_1grams))
+# print(type(train_1grams))
 trainingFeatures = hstack((toxic_data[trainingColumns],train_ngrams, train_1grams)).tocsr()
 trainingFeatureDataFrame = pd.DataFrame(trainingFeatures.toarray())
 
@@ -116,19 +114,19 @@ X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_s
 
 LogisticModel = LogisticRegression(C = 0.1, penalty = 'elasticnet', solver = 'saga', l1_ratio = 0.5)
 FitteddLogistic = LogisticModel.fit(X_train, Y_train)
-crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 5, scoring = 'roc_auc')
+crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 3, scoring = 'roc_auc')
 
-print('crossValidationScore', crossValidationScore, np.mean(crossValidationScore))
+# print('crossValidationScore', crossValidationScore, np.mean(crossValidationScore))
 
-SupportVectorModel = SVC(kernel = 'rbf', C = 0.1, cache_size = 10000.0, decision_function_shape = 'ovo')
-FittedSVModel = SupportVectorModel.fit(X_train, Y_train)
-crossValidationScoreforSV = cross_val_score(SupportVectorModel, X_train, Y_train, cv = 5)
+# SupportVectorModel = SVC(kernel = 'rbf', C = 0.1, cache_size = 10000.0, decision_function_shape = 'ovo')
+# FittedSVModel = SupportVectorModel.fit(X_train, Y_train)
+# crossValidationScoreforSV = cross_val_score(SupportVectorModel, X_train, Y_train, cv = 3)
 
-print('Cross Validation Score Support Vector', crossValidationScoreforSV, np.mean(crossValidationScoreforSV))
+# print('Cross Validation Score Support Vector', crossValidationScoreforSV, np.mean(crossValidationScoreforSV))
 
 # plot the WordCloud image                        
-plt.figure(figsize = (8, 8), facecolor = None) 
-plt.imshow(wordcloud)
-plt.axis("off") 
-plt.tight_layout(pad = 0)
-plt.show()
+# plt.figure(figsize = (8, 8), facecolor = None) 
+# plt.imshow(wordcloud)
+# plt.axis("off") 
+# plt.tight_layout(pad = 0)
+# plt.show()

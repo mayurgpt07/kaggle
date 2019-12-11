@@ -14,6 +14,9 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 import math
 import reverse_geocoder as rgc
+import warnings
+
+warnings.simplefilter('ignore')
 
 train_data = pd.read_csv("./data/kc_house_data.csv", sep = ",", header = 0)
 

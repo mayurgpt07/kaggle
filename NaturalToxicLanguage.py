@@ -129,15 +129,15 @@ X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X, y, test_s
 # crossValidationScore = cross_val_score(LogisticModel, X_train, Y_train, cv = 5, scoring = 'roc_auc')
 
 # print('crossValidationScore', crossValidationScore, np.mean(crossValidationScore))
+for testColumns in testingColumns:
+	SupportVectorModel = SVC(kernel = 'rbf', C = 0.1, cache_size = 10000.0, decision_function_shape = 'ovo')
+	FittedSVModel = SupportVectorModel.fit(X_train, Y_train[testColumns])
+	crossValidationScoreforSV = cross_val_score(SupportVectorModel, X_train, Y_train[testColumns], cv = 5)
 
-SupportVectorModel = SVC(kernel = 'rbf', C = 0.1, cache_size = 10000.0, decision_function_shape = 'ovo')
-FittedSVModel = SupportVectorModel.fit(X_train, Y_train)
-crossValidationScoreforSV = cross_val_score(SupportVectorModel, X_train, Y_train, cv = 5)
-
-print('Cross Validation Score Support Vector', crossValidationScoreforSV, np.mean(crossValidationScoreforSV))
+	print('Cross Validation Score Support Vector', crossValidationScoreforSV, np.mean(crossValidationScoreforSV))
 
 # plot the WordCloud image                        
-# plt.figure(figsize = (8, 8), facecolor = None) 
+# plt.figure(figsize = (8, 8), facecolor = None)
 # plt.imshow(wordcloud)
 # plt.axis("off") 
 # plt.tight_layout(pad = 0)
